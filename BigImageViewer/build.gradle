@@ -46,6 +46,7 @@ android {
 
 dependencies {
     implementation "com.android.support:support-annotations:$rootProject.ext.androidSupportSdkVersion"
+    implementation 'com.github.chrisbanes:PhotoView:2.0.0'
 
     api "com.davemorrissey.labs:subsampling-scale-image-view:$rootProject.ext.ssivVersion"
 }

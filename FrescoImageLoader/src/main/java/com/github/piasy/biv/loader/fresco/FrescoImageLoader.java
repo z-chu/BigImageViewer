@@ -28,6 +28,8 @@ import android.content.Context;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
+
 import com.facebook.binaryresource.FileBinaryResource;
 import com.facebook.cache.common.CacheKey;
 import com.facebook.cache.disk.FileCache;
@@ -47,6 +49,7 @@ import com.facebook.imagepipeline.core.ImagePipelineFactory;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.github.piasy.biv.loader.ImageLoader;
 import com.github.piasy.biv.view.BigImageView;
+
 import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -72,12 +75,12 @@ public final class FrescoImageLoader implements ImageLoader {
     }
 
     public static FrescoImageLoader with(Context appContext,
-            ImagePipelineConfig imagePipelineConfig) {
+                                         ImagePipelineConfig imagePipelineConfig) {
         return with(appContext, imagePipelineConfig, null);
     }
 
     public static FrescoImageLoader with(Context appContext,
-            ImagePipelineConfig imagePipelineConfig, DraweeConfig draweeConfig) {
+                                         ImagePipelineConfig imagePipelineConfig, DraweeConfig draweeConfig) {
         Fresco.initialize(appContext, imagePipelineConfig, draweeConfig);
         return new FrescoImageLoader(appContext);
     }
@@ -120,6 +123,11 @@ public final class FrescoImageLoader implements ImageLoader {
             closeSource(requestId);
             saveSource(requestId, source);
         }
+    }
+
+    @Override
+    public void displayImage(ImageView imageView, Uri uri) {
+        imageView.setImageURI(uri);
     }
 
     private void saveSource(int requestId, DataSource target) {

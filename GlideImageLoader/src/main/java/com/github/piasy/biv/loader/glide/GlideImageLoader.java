@@ -108,6 +108,13 @@ public final class GlideImageLoader implements ImageLoader {
                 .into(target);
     }
 
+    @Override
+    public void displayImage(ImageView imageView, Uri uri) {
+        mRequestManager
+                .load(uri)
+                .into(imageView);
+    }
+
     private void saveTarget(int requestId, ImageDownloadTarget target) {
         mRequestTargetMap.put(requestId, target);
     }
@@ -150,7 +157,7 @@ public final class GlideImageLoader implements ImageLoader {
                 .into(new SimpleTarget<File>() {
                     @Override
                     public void onResourceReady(File resource,
-                            Transition<? super File> transition) {
+                                                Transition<? super File> transition) {
                         // not interested in result
                     }
                 });

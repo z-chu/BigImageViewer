@@ -27,6 +27,7 @@ package com.github.piasy.biv.view;
 import android.Manifest;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -34,6 +35,7 @@ import android.support.annotation.RequiresPermission;
 import android.support.annotation.UiThread;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
@@ -41,14 +43,20 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Toast;
+
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
+import com.github.chrisbanes.photoview.PhotoView;
 import com.github.piasy.biv.BigImageViewer;
 import com.github.piasy.biv.R;
 import com.github.piasy.biv.indicator.ProgressIndicator;
 import com.github.piasy.biv.loader.ImageLoader;
+
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,6 +88,7 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
     private final ImageLoader.Callback mInternalCallback;
 
     private SubsamplingScaleImageView mImageView;
+    private PhotoView mPhotoView;
 
     private View mProgressIndicatorView;
     private View mThumbnailView;
@@ -121,7 +130,7 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
                     IMAGE_SCALE_TYPE_FIT_CENTER_INDEX);
             if (scaleTypeIndex < 0 || IMAGE_SCALE_TYPES.length <= scaleTypeIndex) {
                 throw new IllegalArgumentException("Bad failureImageInitScaleType value: "
-                                                   + scaleTypeIndex);
+                        + scaleTypeIndex);
             }
             mFailureImageScaleType = IMAGE_SCALE_TYPES[scaleTypeIndex];
             Drawable mFailureImageDrawable = array.getDrawable(
@@ -134,6 +143,8 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
         mTapToRetry = array.getBoolean(R.styleable.BigImageView_tapToRetry, true);
 
         array.recycle();
+        mPhotoView = new PhotoView(context);
+        addView(mPhotoView);
 
         if (mCustomSsivId == 0) {
             mImageView = new SubsamplingScaleImageView(context);
@@ -456,11 +467,23 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
 
     @UiThread
     private void doShowImage(File image) {
-        mImageView.setImage(ImageSource.uri(Uri.fromFile(image)));
+        boolean supportedBitmapRegionDecoder = isSupportedBitmapRegionDecoder(image);
+        Toast.makeText(getContext(), String.valueOf(supportedBitmapRegionDecoder), Toast.LENGTH_SHORT).show();
+        if (supportedBitmapRegionDecoder) {
+            mPhotoView.setVisibility(View.GONE);
+            mImageView.setVisibility(View.VISIBLE);
+            mImageView.setImage(ImageSource.uri(Uri.fromFile(image)));
+            mPhotoView.setVisibility(View.GONE);
+            mPhotoView.setVisibility(View.VISIBLE);
+        } else {
+            mPhotoView.setVisibility(View.VISIBLE);
+            mImageView.setVisibility(View.GONE);
+            BitmapFactory.decodeFile(image.getPath());
+            mImageLoader.displayImage(mPhotoView, Uri.fromFile(image));
+        }
         if (mFailureImageView != null) {
             mFailureImageView.setVisibility(GONE);
         }
-        mImageView.setVisibility(VISIBLE);
     }
 
     @UiThread
@@ -472,8 +495,59 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
 
         mFailureImageView.setVisibility(VISIBLE);
         mImageView.setVisibility(GONE);
+        mPhotoView.setVisibility(View.GONE);
         if (mProgressIndicatorView != null) {
             mProgressIndicatorView.setVisibility(GONE);
         }
     }
+
+
+    /**
+     * 是否支持高清大图查看
+     */
+    private boolean isSupportedBitmapRegionDecoder(File file) {
+        FileInputStream is = null;
+        String value = null;
+        try {
+            is = new FileInputStream(file);
+            byte[] b = new byte[3];
+            is.read(b, 0, b.length);
+            value = bytesToHexString(b);
+            return value != null && (value.equals("FFD8FF") || value.equals("89504E47"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (null != is) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 将byte字节转换为十六进制字符串
+     *
+     * @param src
+     * @return
+     */
+    private static String bytesToHexString(byte[] src) {
+        StringBuilder builder = new StringBuilder();
+        if (src == null || src.length <= 0) {
+            return null;
+        }
+        String hv;
+        for (int i = 0; i < src.length; i++) {
+            hv = Integer.toHexString(src[i] & 0xFF).toUpperCase();
+            if (hv.length() < 2) {
+                builder.append(0);
+            }
+            builder.append(hv);
+        }
+        return builder.toString();
+    }
+
 }

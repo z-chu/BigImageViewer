@@ -50,7 +50,7 @@ public class FrescoLoaderActivity extends AppCompatActivity {
                 bigImageView.setProgressIndicator(new ProgressPieIndicator());
                 bigImageView.showImage(
                         Uri.parse("https://images.unsplash.com/photo-1497240299146-17ff4089466a?dpr=2&auto=compress,format&fit=crop&w=376"),
-                        Uri.parse("https://images.unsplash.com/photo-1497240299146-17ff4089466a")
+                        Uri.parse("http://img.gank.io/6fe115da-20d7-4774-8f87-0b776ec7885c")
                 );
             }
         });
