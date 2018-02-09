@@ -35,7 +35,6 @@ import android.support.annotation.RequiresPermission;
 import android.support.annotation.UiThread;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
@@ -47,7 +46,6 @@ import android.widget.Toast;
 
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
-import com.github.chrisbanes.photoview.PhotoView;
 import com.github.piasy.biv.BigImageViewer;
 import com.github.piasy.biv.R;
 import com.github.piasy.biv.indicator.ProgressIndicator;
@@ -88,7 +86,7 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
     private final ImageLoader.Callback mInternalCallback;
 
     private SubsamplingScaleImageView mImageView;
-    private PhotoView mPhotoView;
+    private View mSmallImageView;
 
     private View mProgressIndicatorView;
     private View mThumbnailView;
@@ -143,8 +141,7 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
         mTapToRetry = array.getBoolean(R.styleable.BigImageView_tapToRetry, true);
 
         array.recycle();
-        mPhotoView = new PhotoView(context);
-        addView(mPhotoView);
+
 
         if (mCustomSsivId == 0) {
             mImageView = new SubsamplingScaleImageView(context);
@@ -156,6 +153,10 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
         } else {
             mImageLoader = BigImageViewer.imageLoader();
         }
+
+        mSmallImageView = mImageLoader.getSmallImageView(context);
+        addView(mSmallImageView);
+
         mInternalCallback = ThreadedCallbacks.create(ImageLoader.Callback.class, this);
 
         mTempImages = new ArrayList<>();
@@ -468,18 +469,16 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
     @UiThread
     private void doShowImage(File image) {
         boolean supportedBitmapRegionDecoder = isSupportedBitmapRegionDecoder(image);
-        Toast.makeText(getContext(), String.valueOf(supportedBitmapRegionDecoder), Toast.LENGTH_SHORT).show();
-        if (supportedBitmapRegionDecoder) {
-            mPhotoView.setVisibility(View.GONE);
+        Toast.makeText(getContext(), String.valueOf(isBigImage(image)), Toast.LENGTH_SHORT).show();
+        if (supportedBitmapRegionDecoder&&isBigImage(image)) {
+            mSmallImageView.setVisibility(View.GONE);
             mImageView.setVisibility(View.VISIBLE);
             mImageView.setImage(ImageSource.uri(Uri.fromFile(image)));
-            mPhotoView.setVisibility(View.GONE);
-            mPhotoView.setVisibility(View.VISIBLE);
         } else {
-            mPhotoView.setVisibility(View.VISIBLE);
+            mSmallImageView.setVisibility(View.VISIBLE);
             mImageView.setVisibility(View.GONE);
             BitmapFactory.decodeFile(image.getPath());
-            mImageLoader.displayImage(mPhotoView, Uri.fromFile(image));
+            mImageLoader.displayImage(mSmallImageView, Uri.fromFile(image));
         }
         if (mFailureImageView != null) {
             mFailureImageView.setVisibility(GONE);
@@ -495,12 +494,25 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
 
         mFailureImageView.setVisibility(VISIBLE);
         mImageView.setVisibility(GONE);
-        mPhotoView.setVisibility(View.GONE);
+        mSmallImageView.setVisibility(View.GONE);
         if (mProgressIndicatorView != null) {
             mProgressIndicatorView.setVisibility(GONE);
         }
     }
 
+
+    /**
+     * 是否是高清大图
+     *
+     * @param file
+     * @return
+     */
+    private boolean isBigImage(File file) {
+        BitmapFactory.Options op = new BitmapFactory.Options();
+        op.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(file.getPath(), op);
+        return op.outWidth > 1080 || op.outHeight > 1080;
+    }
 
     /**
      * 是否支持高清大图查看

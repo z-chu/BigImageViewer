@@ -53,6 +53,8 @@ import com.github.piasy.biv.view.BigImageView;
 import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 
+import me.relex.photodraweeview.PhotoDraweeView;
+
 /**
  * Created by Piasy{github.com/Piasy} on 08/11/2016.
  */
@@ -126,8 +128,15 @@ public final class FrescoImageLoader implements ImageLoader {
     }
 
     @Override
-    public void displayImage(ImageView imageView, Uri uri) {
-        imageView.setImageURI(uri);
+    public void displayImage(View view, Uri uri) {
+        //imageView.setImageURI(uri);
+        ((PhotoDraweeView) view).setPhotoUri(uri);
+
+    }
+
+    @Override
+    public View getSmallImageView(Context context) {
+        return new PhotoDraweeView(context);
     }
 
     private void saveSource(int requestId, DataSource target) {

@@ -35,6 +35,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.github.chrisbanes.photoview.PhotoView;
 import com.github.piasy.biv.loader.ImageLoader;
 import com.github.piasy.biv.view.BigImageView;
 
@@ -109,10 +110,15 @@ public final class GlideImageLoader implements ImageLoader {
     }
 
     @Override
-    public void displayImage(ImageView imageView, Uri uri) {
+    public void displayImage(View view, Uri uri) {
         mRequestManager
                 .load(uri)
-                .into(imageView);
+                .into((ImageView) view);
+    }
+
+    @Override
+    public View getSmallImageView(Context context) {
+        return new PhotoView(context);
     }
 
     private void saveTarget(int requestId, ImageDownloadTarget target) {

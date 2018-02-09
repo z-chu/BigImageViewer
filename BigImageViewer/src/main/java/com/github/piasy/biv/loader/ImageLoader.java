@@ -24,6 +24,7 @@
 
 package com.github.piasy.biv.loader;
 
+import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.UiThread;
 import android.view.View;
@@ -41,7 +42,9 @@ public interface ImageLoader {
 
     void loadImage(int requestId, Uri uri, Callback callback);
 
-    void displayImage(ImageView imageView, Uri uri);
+    void displayImage(View imageView, Uri uri);
+
+    View getSmallImageView(Context context);
 
     View showThumbnail(BigImageView parent, Uri thumbnail, int scaleType);
 

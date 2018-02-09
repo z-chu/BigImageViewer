@@ -50,4 +50,5 @@ dependencies {
     api project(':BigImageViewer')
 
     api "com.facebook.fresco:fresco:$rootProject.ext.frescoVersion"
+    api 'me.relex:photodraweeview:1.1.3'
 }
